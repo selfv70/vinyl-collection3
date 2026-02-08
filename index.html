@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vic's Vinyl Collection</title>
+  
+  <!-- React and ReactDOM from CDN -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .app {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding-bottom: 80px;
+    }
+
+    /* Navigation */
+    .nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+      z-index: 1000;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 16px;
+      background: none;
+      border: none;
+      color: #8e8e93;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border-radius: 12px;
+    }
+
+    .nav-item.active {
+      color: #667eea;
+    }
+
+    .nav-item svg {
+      transition: transform 0.2s ease;
+    }
+
+    .nav-item:active {
+      transform: scale(0.95);
+    }
+
+    .nav-item.active svg {
+      transform: scale(1.1);
+    }
+
+    /* Main Content */
+    .main {
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .view-container {
+      background: white;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Home View */
+    .home-view {
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .hero-section {
+      background: white;
+      border-radius: 24px;
+      padding: 48px 24px;
+      text-align: center;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .hero-icon {
+      width: 80px;
+      height: 80px;
+      color: #667eea;
+      margin: 0 auto 16px;
+    }
+
+    .hero-title {
+      font-size: 32px;
+      font-weight: 700;
+      color: #1c1c1e;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+
+    .hero-subtitle {
+      font-size: 16px;
+      color: #8e8e93;
+      font-weight: 500;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 20px;
+      padding: 24px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-card:active {
+      transform: scale(0.95);
+    }
+
+    .stat-card svg {
+      color: #667eea;
+      margin-bottom: 12px;
+      width: 32px;
+      height: 32px;
+    }
+
+    .stat-number {
+      font-size: 32px;
+      font-weight: 700;
+      color: #1c1c1e;
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: #8e8e93;
+      font-weight: 500;
+    }
+
+    .quick-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    /* View Header */
+    .view-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .view-header h2 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1c1c1e;
+    }
+
+    /* Search Bar */
+    .search-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #f5f5f7;
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+    }
+
+    .search-bar svg {
+      color: #8e8e93;
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+    }
+
+    .search-bar input {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      font-size: 16px;
+      color: #1c1c1e;
+    }
+
+    .search-button {
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .search-button:disabled {
+      opacity: 0.5;
+    }
+
+    /* Filters */
+    .filters {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .filters select {
+      background: #f5f5f7;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 14px;
+      color: #1c1c1e;
+      font-weight: 500;
+      cursor: pointer;
+      outline: none;
+      flex-shrink: 0;
+    }
+
+    /* Items Grid */
+    .items-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .item-card {
+      background: #f5f5f7;
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      gap: 16px;
+      align-items: start;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+
+    .item-card:active {
+      transform: scale(0.98);
+    }
+
+    .item-image {
+      width: 80px;
+      height: 80px;
+      border-radius: 12px;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .item-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .item-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #c7c7cc;
+    }
+
+    .item-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .item-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1c1c1e;
+      margin-bottom: 4px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .item-artist {
+      font-size: 14px;
+      color: #8e8e93;
+      margin-bottom: 8px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .item-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .item-meta span {
+      font-size: 12px;
+      color: #667eea;
+      background: rgba(102, 126, 234, 0.1);
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-weight: 500;
+    }
+
+    .item-remove {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: rgba(255, 59, 48, 0.1);
+      color: #ff3b30;
+      border: none;
+      width: 28px;
+      height: 28px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .item-remove:active {
+      transform: scale(0.9);
+    }
+
+    .item-actions {
+      display: flex;
+      gap: 8px;
+      position: absolute;
+      top: 12px;
+      right: 12px;
+    }
+
+    /* Buttons */
+    .primary-button {
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 24px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      transition: all 0.2s ease;
+    }
+
+    .primary-button:active {
+      transform: scale(0.98);
+    }
+
+    .secondary-button {
+      background: white;
+      color: #667eea;
+      border: 2px solid #667eea;
+      border-radius: 12px;
+      padding: 14px 24px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      transition: all 0.2s ease;
+    }
+
+    .secondary-button:active {
+      transform: scale(0.98);
+    }
+
+    .icon-button {
+      background: #f5f5f7;
+      color: #1c1c1e;
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .icon-button:active {
+      transform: scale(0.9);
+    }
+
+    .icon-button.success {
+      background: rgba(52, 199, 89, 0.1);
+      color: #34c759;
+    }
+
+    .icon-button.danger {
+      background: rgba(255, 59, 48, 0.1);
+      color: #ff3b30;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: flex-end;
+      z-index: 2000;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 20px 20px 0 0;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(100%);
+      }
+      to {
+        transform: translateY(0);
+      }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 24px;
+      border-bottom: 1px solid #f5f5f7;
+      position: sticky;
+      top: 0;
+      background: white;
+      z-index: 10;
+    }
+
+    .modal-header h2 {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1c1c1e;
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+    /* Capture Section */
+    .capture-section {
+      margin-bottom: 24px;
+    }
+
+    .capture-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: #667eea;
+      color: white;
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .capture-button:active {
+      transform: scale(0.98);
+    }
+
+    /* Search Section */
+    .search-section {
+      margin-bottom: 24px;
+    }
+
+    .search-results {
+      margin-top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .search-result-item {
+      display: flex;
+      gap: 12px;
+      padding: 12px;
+      background: #f5f5f7;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .search-result-item:active {
+      transform: scale(0.98);
+    }
+
+    .search-result-item img {
+      width: 60px;
+      height: 60px;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+
+    .result-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1c1c1e;
+      margin-bottom: 4px;
+    }
+
+    .result-meta {
+      font-size: 12px;
+      color: #8e8e93;
+    }
+
+    /* Form */
+    .add-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-group label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1c1c1e;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      background: #f5f5f7;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 16px;
+      color: #1c1c1e;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .form-group textarea {
+      resize: vertical;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: #8e8e93;
+    }
+
+    .empty-state svg {
+      margin-bottom: 16px;
+      opacity: 0.5;
+      width: 64px;
+      height: 64px;
+    }
+
+    .empty-state p {
+      font-size: 16px;
+      margin-bottom: 24px;
+    }
+
+    /* Top 100 List */
+    .top100-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .top100-item {
+      background: #f5f5f7;
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .chart-position {
+      font-size: 24px;
+      font-weight: 700;
+      color: #667eea;
+      min-width: 50px;
+      text-align: center;
+    }
+
+    .top100-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .top100-content h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1c1c1e;
+      margin-bottom: 4px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .top100-content p {
+      font-size: 14px;
+      color: #8e8e93;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .year-select {
+      width: 100%;
+      background: #f5f5f7;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 16px;
+      color: #1c1c1e;
+      font-weight: 500;
+      margin-bottom: 20px;
+    }
+
+    .spin {
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* Responsive */
+    @media (min-width: 768px) {
+      .items-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .modal-content {
+        border-radius: 20px;
+        max-width: 600px;
+        margin: auto;
+        max-height: 90vh;
+      }
+
+      .modal-overlay {
+        align-items: center;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .hero-title {
+        font-size: 28px;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stat-card {
+        display: flex;
+        align-items: center;
+        text-align: left;
+        gap: 16px;
+        padding: 20px;
+      }
+
+      .stat-card svg {
+        margin-bottom: 0;
+      }
+
+      .quick-actions {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useCallback } = React;
+
+    // Simple SVG icons as components
+    const Icon = ({ name, size = 24, ...props }) => {
+      const icons = {
+        album: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>,
+        music: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>,
+        heart: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>,
+        trendingUp: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
+        list: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>,
+        plus: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+        search: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>,
+        camera: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>,
+        x: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+        check: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}><polyline points="20 6 9 17 4 12"/></svg>,
+        loader: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="spin" {...props}><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>,
+      };
+      return icons[name] || null;
+    };
+
+    // Local storage hook
+    const useLocalStorage = (key, initialValue) => {
+      const [value, setValue] = useState(() => {
+        try {
+          const item = window.localStorage.getItem(key);
+          return item ? JSON.parse(item) : initialValue;
+        } catch {
+          return initialValue;
+        }
+      });
+
+      const setStoredValue = (newValue) => {
+        setValue(newValue);
+        window.localStorage.setItem(key, JSON.stringify(newValue));
+      };
+
+      return [value, setStoredValue];
+    };
+
+    // Generate sample Top 100 data
+    const generateSampleTop100Data = () => {
+      const sampleArtists = [
+        'The Beatles', 'Pink Floyd', 'Queen', 'Led Zeppelin', 'David Bowie',
+        'Fleetwood Mac', 'The Rolling Stones', 'Elton John', 'Oasis', 'Blur',
+        'Radiohead', 'Arctic Monkeys', 'Adele', 'Amy Winehouse', 'Coldplay'
+      ];
+      
+      const sampleAlbums = [
+        'Abbey Road', 'The Dark Side of the Moon', 'A Night at the Opera',
+        'IV', 'The Rise and Fall of Ziggy Stardust', 'Rumours', 'Exile on Main St.',
+        'Goodbye Yellow Brick Road', "(What's the Story) Morning Glory?", 'Parklife',
+        'OK Computer', 'AM', '21', 'Back to Black', 'A Rush of Blood to the Head'
+      ];
+
+      const data = [];
+      for (let year = 1970; year <= 2025; year++) {
+        for (let position = 1; position <= 100; position++) {
+          data.push({
+            id: `top100-${year}-${position}`,
+            year,
+            position,
+            artist: sampleArtists[Math.floor(Math.random() * sampleArtists.length)],
+            album: sampleAlbums[Math.floor(Math.random() * sampleAlbums.length)],
+          });
+        }
+      }
+      return data;
+    };
+
+    // Search Discogs
+    const searchDiscogs = async (query) => {
+      try {
+        const response = await fetch(
+          `https://api.discogs.com/database/search?q=${encodeURIComponent(query)}&type=release&per_page=20`,
+          {
+            headers: {
+              'User-Agent': 'VicsVinylCollection/1.0',
+            }
+          }
+        );
+        const data = await response.json();
+        return data.results || [];
+      } catch (error) {
+        console.error('Discogs search error:', error);
+        return [];
+      }
+    };
+
+    // Main App Component
+    function VinylCollection() {
+      const [activeView, setActiveView] = useState('home');
+      const [collection, setCollection] = useLocalStorage('vinylCollection', []);
+      const [wishlist, setWishlist] = useLocalStorage('vinylWishlist', []);
+      const [top100Data, setTop100Data] = useLocalStorage('top100Albums', []);
+      const [searchTerm, setSearchTerm] = useState('');
+      const [discogsResults, setDiscogsResults] = useState([]);
+      const [loading, setLoading] = useState(false);
+      const [showAddModal, setShowAddModal] = useState(false);
+      const [sortBy, setSortBy] = useState('artist');
+      const [filterYear, setFilterYear] = useState('all');
+      const [filterGenre, setFilterGenre] = useState('all');
+      
+      const [formData, setFormData] = useState({
+        artist: '',
+        album: '',
+        year: '',
+        genre: '',
+        condition: 'VG+',
+        notes: ''
+      });
+
+      // Initialize Top 100 data
+      useEffect(() => {
+        if (top100Data.length === 0) {
+          setTop100Data(generateSampleTop100Data());
+        }
+      }, []);
+
+      // Search Discogs
+      const handleDiscogsSearch = async (query) => {
+        if (!query.trim()) return;
+        setLoading(true);
+        const results = await searchDiscogs(query);
+        setDiscogsResults(results);
+        setLoading(false);
+      };
+
+      // Add to collection
+      const addToCollection = (item) => {
+        const newItem = {
+          ...item,
+          id: `collection-${Date.now()}`,
+          dateAdded: new Date().toISOString()
+        };
+        setCollection([...collection, newItem]);
+        setShowAddModal(false);
+        resetForm();
+      };
+
+      // Add to wishlist
+      const addToWishlist = (item) => {
+        const newItem = {
+          ...item,
+          id: `wishlist-${Date.now()}`,
+          dateAdded: new Date().toISOString()
+        };
+        setWishlist([...wishlist, newItem]);
+      };
+
+      // Remove functions
+      const removeFromCollection = (id) => {
+        setCollection(collection.filter(item => item.id !== id));
+      };
+
+      const removeFromWishlist = (id) => {
+        setWishlist(wishlist.filter(item => item.id !== id));
+      };
+
+      // Move from wishlist to collection
+      const moveToCollection = (item) => {
+        addToCollection(item);
+        removeFromWishlist(item.id);
+      };
+
+      // Reset form
+      const resetForm = () => {
+        setFormData({
+          artist: '',
+          album: '',
+          year: '',
+          genre: '',
+          condition: 'VG+',
+          notes: ''
+        });
+        setDiscogsResults([]);
+        setSearchTerm('');
+      };
+
+      // Filtering and sorting
+      const getFilteredAndSorted = (items) => {
+        let filtered = [...items];
+
+        if (filterYear !== 'all') {
+          filtered = filtered.filter(item => item.year?.toString() === filterYear);
+        }
+        if (filterGenre !== 'all') {
+          filtered = filtered.filter(item => item.genre?.toLowerCase() === filterGenre.toLowerCase());
+        }
+
+        if (searchTerm) {
+          const term = searchTerm.toLowerCase();
+          filtered = filtered.filter(item =>
+            item.artist?.toLowerCase().includes(term) ||
+            item.album?.toLowerCase().includes(term) ||
+            item.genre?.toLowerCase().includes(term)
+          );
+        }
+
+        filtered.sort((a, b) => {
+          if (sortBy === 'artist') return (a.artist || '').localeCompare(b.artist || '');
+          if (sortBy === 'album') return (a.album || '').localeCompare(b.album || '');
+          if (sortBy === 'year') return (b.year || 0) - (a.year || 0);
+          if (sortBy === 'dateAdded') return new Date(b.dateAdded) - new Date(a.dateAdded);
+          return 0;
+        });
+
+        return filtered;
+      };
+
+      const getUniqueYears = (items) => {
+        return [...new Set(items.map(item => item.year).filter(Boolean))].sort((a, b) => b - a);
+      };
+
+      const getUniqueGenres = (items) => {
+        return [...new Set(items.map(item => item.genre).filter(Boolean))].sort();
+      };
+
+      // Render Home
+      const renderHome = () => (
+        <div className="view-container home-view">
+          <div className="hero-section">
+            <div className="hero-content">
+              <Icon name="album" size={80} className="hero-icon" />
+              <h1 className="hero-title">Vic's Vinyl Collection</h1>
+              <p className="hero-subtitle">
+                {collection.length} records • {wishlist.length} on wishlist
+              </p>
+            </div>
+          </div>
+
+          <div className="stats-grid">
+            <div className="stat-card" onClick={() => setActiveView('collection')}>
+              <Icon name="music" size={32} />
+              <div className="stat-number">{collection.length}</div>
+              <div className="stat-label">Records</div>
+            </div>
+            
+            <div className="stat-card" onClick={() => setActiveView('wishlist')}>
+              <Icon name="heart" size={32} />
+              <div className="stat-number">{wishlist.length}</div>
+              <div className="stat-label">Wishlist</div>
+            </div>
+            
+            <div className="stat-card" onClick={() => setActiveView('top100')}>
+              <Icon name="trendingUp" size={32} />
+              <div className="stat-number">{top100Data.length}</div>
+              <div className="stat-label">Top 100 Albums</div>
+            </div>
+          </div>
+
+          <div className="quick-actions">
+            <button className="primary-button" onClick={() => setShowAddModal(true)}>
+              <Icon name="plus" size={20} />
+              Add to Collection
+            </button>
+            <button className="secondary-button" onClick={() => setActiveView('collection')}>
+              <Icon name="list" size={20} />
+              View Collection
+            </button>
+          </div>
+        </div>
+      );
+
+      // Render Collection
+      const renderCollection = () => {
+        const filtered = getFilteredAndSorted(collection);
+        const years = getUniqueYears(collection);
+        const genres = getUniqueGenres(collection);
+
+        return (
+          <div className="view-container">
+            <div className="view-header">
+              <h2>My Collection</h2>
+              <button className="icon-button" onClick={() => setShowAddModal(true)}>
+                <Icon name="plus" size={20} />
+              </button>
+            </div>
+
+            <div className="search-bar">
+              <Icon name="search" size={20} />
+              <input
+                type="text"
+                placeholder="Search collection..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+
+            <div className="filters">
+              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                <option value="artist">Sort by Artist</option>
+                <option value="album">Sort by Album</option>
+                <option value="year">Sort by Year</option>
+                <option value="dateAdded">Sort by Date Added</option>
+              </select>
+
+              <select value={filterYear} onChange={(e) => setFilterYear(e.target.value)}>
+                <option value="all">All Years</option>
+                {years.map(year => <option key={year} value={year}>{year}</option>)}
+              </select>
+
+              <select value={filterGenre} onChange={(e) => setFilterGenre(e.target.value)}>
+                <option value="all">All Genres</option>
+                {genres.map(genre => <option key={genre} value={genre}>{genre}</option>)}
+              </select>
+            </div>
+
+            <div className="items-grid">
+              {filtered.map(item => (
+                <div key={item.id} className="item-card">
+                  <div className="item-image">
+                    {item.coverImage ? (
+                      <img src={item.coverImage} alt={item.album} />
+                    ) : (
+                      <div className="item-placeholder">
+                        <Icon name="album" size={48} />
+                      </div>
+                    )}
+                  </div>
+                  <div className="item-content">
+                    <h3 className="item-title">{item.album || 'Unknown Album'}</h3>
+                    <p className="item-artist">{item.artist || 'Unknown Artist'}</p>
+                    <div className="item-meta">
+                      {item.year && <span>{item.year}</span>}
+                      {item.genre && <span>{item.genre}</span>}
+                      {item.condition && <span>{item.condition}</span>}
+                    </div>
+                  </div>
+                  <button 
+                    className="item-remove"
+                    onClick={() => removeFromCollection(item.id)}
+                  >
+                    <Icon name="x" size={16} />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {filtered.length === 0 && (
+              <div className="empty-state">
+                <Icon name="album" size={64} />
+                <p>No records found</p>
+                <button className="primary-button" onClick={() => setShowAddModal(true)}>
+                  <Icon name="plus" size={20} />
+                  Add Your First Record
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      };
+
+      // Render Wishlist
+      const renderWishlist = () => {
+        const filtered = getFilteredAndSorted(wishlist);
+
+        return (
+          <div className="view-container">
+            <div className="view-header">
+              <h2>Wishlist</h2>
+              <button className="icon-button" onClick={() => setActiveView('top100')}>
+                <Icon name="plus" size={20} />
+              </button>
+            </div>
+
+            <div className="search-bar">
+              <Icon name="search" size={20} />
+              <input
+                type="text"
+                placeholder="Search wishlist..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+
+            <div className="items-grid">
+              {filtered.map(item => (
+                <div key={item.id} className="item-card wishlist-card">
+                  <div className="item-image">
+                    {item.coverImage ? (
+                      <img src={item.coverImage} alt={item.album} />
+                    ) : (
+                      <div className="item-placeholder">
+                        <Icon name="heart" size={48} />
+                      </div>
+                    )}
+                  </div>
+                  <div className="item-content">
+                    <h3 className="item-title">{item.album || 'Unknown Album'}</h3>
+                    <p className="item-artist">{item.artist || 'Unknown Artist'}</p>
+                    <div className="item-meta">
+                      {item.year && <span>{item.year}</span>}
+                      {item.genre && <span>{item.genre}</span>}
+                    </div>
+                  </div>
+                  <div className="item-actions">
+                    <button 
+                      className="icon-button success"
+                      onClick={() => moveToCollection(item)}
+                      title="Add to collection"
+                    >
+                      <Icon name="check" size={16} />
+                    </button>
+                    <button 
+                      className="icon-button danger"
+                      onClick={() => removeFromWishlist(item.id)}
+                      title="Remove"
+                    >
+                      <Icon name="x" size={16} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {filtered.length === 0 && (
+              <div className="empty-state">
+                <Icon name="heart" size={64} />
+                <p>Your wishlist is empty</p>
+                <button className="primary-button" onClick={() => setActiveView('top100')}>
+                  <Icon name="trendingUp" size={20} />
+                  Browse Top 100
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      };
+
+      // Render Top 100
+      const renderTop100 = () => {
+        const [selectedYear, setSelectedYear] = useState('2024');
+        const filtered = top100Data
+          .filter(item => item.year.toString() === selectedYear)
+          .sort((a, b) => a.position - b.position);
+
+        const years = [...new Set(top100Data.map(item => item.year))].sort((a, b) => b - a);
+
+        return (
+          <div className="view-container">
+            <div className="view-header">
+              <h2>UK Top 100 Albums</h2>
+            </div>
+
+            <div className="filters">
+              <select 
+                value={selectedYear} 
+                onChange={(e) => setSelectedYear(e.target.value)}
+                className="year-select"
+              >
+                {years.map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="top100-list">
+              {filtered.map(item => (
+                <div key={item.id} className="top100-item">
+                  <div className="chart-position">#{item.position}</div>
+                  <div className="top100-content">
+                    <h3>{item.album}</h3>
+                    <p>{item.artist}</p>
+                  </div>
+                  <button 
+                    className="icon-button"
+                    onClick={() => addToWishlist(item)}
+                    title="Add to wishlist"
+                  >
+                    <Icon name="heart" size={18} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      };
+
+      // Render Add Modal
+      const renderAddModal = () => (
+        <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Add to Collection</h2>
+              <button className="icon-button" onClick={() => setShowAddModal(false)}>
+                <Icon name="x" size={24} />
+              </button>
+            </div>
+
+            <div className="modal-body">
+              {/* Discogs Search */}
+              <div className="search-section">
+                <div className="search-bar">
+                  <Icon name="search" size={20} />
+                  <input
+                    type="text"
+                    placeholder="Search Discogs..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleDiscogsSearch(searchTerm)}
+                  />
+                  <button 
+                    className="search-button"
+                    onClick={() => handleDiscogsSearch(searchTerm)}
+                    disabled={loading}
+                  >
+                    {loading ? <Icon name="loader" size={20} /> : 'Search'}
+                  </button>
+                </div>
+
+                {discogsResults.length > 0 && (
+                  <div className="search-results">
+                    {discogsResults.map((result, idx) => (
+                      <div 
+                        key={idx} 
+                        className="search-result-item"
+                        onClick={() => {
+                          setFormData({
+                            artist: result.title?.split(' - ')[0] || '',
+                            album: result.title?.split(' - ')[1] || result.title || '',
+                            year: result.year || '',
+                            genre: result.genre?.[0] || '',
+                            coverImage: result.cover_image,
+                            condition: 'VG+',
+                            notes: ''
+                          });
+                        }}
+                      >
+                        {result.cover_image && (
+                          <img src={result.cover_image} alt={result.title} />
+                        )}
+                        <div>
+                          <div className="result-title">{result.title}</div>
+                          <div className="result-meta">
+                            {result.year} • {result.format?.join(', ')}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Manual Entry Form */}
+              <form className="add-form" onSubmit={(e) => {
+                e.preventDefault();
+                addToCollection(formData);
+              }}>
+                <div className="form-group">
+                  <label>Artist</label>
+                  <input
+                    type="text"
+                    value={formData.artist}
+                    onChange={(e) => setFormData({...formData, artist: e.target.value})}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Album</label>
+                  <input
+                    type="text"
+                    value={formData.album}
+                    onChange={(e) => setFormData({...formData, album: e.target.value})}
+                    required
+                  />
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Year</label>
+                    <input
+                      type="text"
+                      value={formData.year}
+                      onChange={(e) => setFormData({...formData, year: e.target.value})}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Genre</label>
+                    <input
+                      type="text"
+                      value={formData.genre}
+                      onChange={(e) => setFormData({...formData, genre: e.target.value})}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Condition</label>
+                  <select
+                    value={formData.condition}
+                    onChange={(e) => setFormData({...formData, condition: e.target.value})}
+                  >
+                    <option value="M">Mint (M)</option>
+                    <option value="NM">Near Mint (NM)</option>
+                    <option value="VG+">Very Good Plus (VG+)</option>
+                    <option value="VG">Very Good (VG)</option>
+                    <option value="G+">Good Plus (G+)</option>
+                    <option value="G">Good (G)</option>
+                    <option value="F">Fair (F)</option>
+                    <option value="P">Poor (P)</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Notes</label>
+                  <textarea
+                    value={formData.notes}
+                    onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                    rows={3}
+                  />
+                </div>
+
+                <div className="form-actions">
+                  <button type="button" className="secondary-button" onClick={resetForm}>
+                    Clear
+                  </button>
+                  <button type="submit" className="primary-button">
+                    Add to Collection
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      );
+
+      // Main Render
+      return (
+        <div className="app">
+          <nav className="nav">
+            <button 
+              className={activeView === 'home' ? 'nav-item active' : 'nav-item'}
+              onClick={() => setActiveView('home')}
+            >
+              <Icon name="album" size={24} />
+              <span>Home</span>
+            </button>
+            <button 
+              className={activeView === 'collection' ? 'nav-item active' : 'nav-item'}
+              onClick={() => setActiveView('collection')}
+            >
+              <Icon name="list" size={24} />
+              <span>Collection</span>
+            </button>
+            <button 
+              className={activeView === 'wishlist' ? 'nav-item active' : 'nav-item'}
+              onClick={() => setActiveView('wishlist')}
+            >
+              <Icon name="heart" size={24} />
+              <span>Wishlist</span>
+            </button>
+            <button 
+              className={activeView === 'top100' ? 'nav-item active' : 'nav-item'}
+              onClick={() => setActiveView('top100')}
+            >
+              <Icon name="trendingUp" size={24} />
+              <span>Top 100</span>
+            </button>
+          </nav>
+
+          <main className="main">
+            {activeView === 'home' && renderHome()}
+            {activeView === 'collection' && renderCollection()}
+            {activeView === 'wishlist' && renderWishlist()}
+            {activeView === 'top100' && renderTop100()}
+          </main>
+
+          {showAddModal && renderAddModal()}
+        </div>
+      );
+    }
+
+    // Render the app
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<VinylCollection />);
+  </script>
+</body>
+</html>
